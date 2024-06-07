@@ -1,13 +1,13 @@
 <?php
 
-namespace OpenAdmin\Admin\ApiTester;
+namespace OpenAdminCore\Admin\ApiTester;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use OpenAdmin\Admin\Extension;
+use OpenAdminCore\Admin\Extension;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response;
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace OpenAdmin\Admin\ApiTester;
+namespace OpenAdminCore\Admin\ApiTester;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
-use OpenAdmin\Admin\Facades\Admin;
-use OpenAdmin\Admin\Layout\Content;
+use OpenAdminCore\Admin\Facades\Admin;
+use OpenAdminCore\Admin\Layout\Content;
 
 class ApiTesterController extends Controller
 {

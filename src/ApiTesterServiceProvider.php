@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenAdmin\Admin\ApiTester;
+namespace OpenAdminCore\Admin\ApiTester;
 
 use Illuminate\Support\ServiceProvider;
 

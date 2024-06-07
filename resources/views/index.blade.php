@@ -60,7 +60,7 @@
 
                 <ul class="nav nav-pills nav-stacked routes" style="margin-top: 5px;">
                     @foreach($routes as $route)
-                        @php ($color = OpenAdmin\Admin\ApiTester\ApiTester::$methodColors[$route['method']])
+                        @php ($color = OpenAdminCore\Admin\ApiTester\ApiTester::$methodColors[$route['method']])
                         <li class="route-item w-100"
                             data-uri="{{ $route['uri'] }}"
                             data-method="{{ $route['method'] }}"

@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenAdmin\Admin\ApiTester;
+namespace OpenAdminCore\Admin\ApiTester;
 
-use OpenAdmin\Admin\Admin;
+use OpenAdminCore\Admin\Admin;
 
 trait BootExtension
 {
@@ -27,8 +27,8 @@ trait BootExtension
     {
         parent::routes(function ($router) {
             /* @var \Illuminate\Routing\Router $router */
-            $router->get('api-tester', 'OpenAdmin\Admin\ApiTester\ApiTesterController@index')->name('api-tester-index');
-            $router->post('api-tester/handle', 'OpenAdmin\Admin\ApiTester\ApiTesterController@handle')->name('api-tester-handle');
+            $router->get('api-tester', 'OpenAdminCore\Admin\ApiTester\ApiTesterController@index')->name('api-tester-index');
+            $router->post('api-tester/handle', 'OpenAdminCore\Admin\ApiTester\ApiTesterController@handle')->name('api-tester-handle');
         });
     }
 
