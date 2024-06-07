@@ -16,7 +16,7 @@ API tester for open-admin
 ## Installation
 
 ```
-$ composer require open-admin-ext/api-tester
+$ composer require dedermus/api-tester
 
 $ php artisan vendor:publish --tag=api-tester
 
