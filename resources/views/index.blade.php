@@ -40,7 +40,6 @@
     }
 
     </style>
-<p>7777777777</p>
 <div class="row">
     <div class="col-md-3">
 
