@@ -39,8 +39,8 @@ Finally open `http://localhost/admin/api-tester`.
 
         'api-tester' => [
 
-            // route prefix for APIs
-            'prefix' => 'api',
+            // route prefix for APIs
+            'prefix' => env('API_PREFIX', 'api'),
 
             // auth guard for api
             'guard'  => 'api',
@@ -53,6 +53,13 @@ Finally open `http://localhost/admin/api-tester`.
     ]
 
 ```
+
+## Configuration
+
+Add in to env file
+`API_PREFIX = v1`
+
+
 
 License
 ------------
