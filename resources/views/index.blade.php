@@ -38,11 +38,13 @@
         font-size:1.5rem;
         margin-bottom:0;
     }
+    .hidden {
+        display: none;
+    }
 
     </style>
 <div class="row">
     <div class="col-md-3">
-
         <div class="card">
             <div class="card-header"><h2 class="">Routes</h2></div>
             <div class="card-body">
@@ -83,10 +85,7 @@
 
     <!-- /.col -->
     <div class="col-md-9">
-
-
         <div class="card">
-
             <form id="api-tester-form" method="post" class="form-horizontal api-tester-form"  enctype="multipart/form-data" autocomplete="off" action="{{ route('api-tester-handle') }}">
                 <div class="card-header"><h2 class="">Request</h2></div>
                 <div class="card-body">
@@ -106,10 +105,45 @@
                         </div>
                     </div>
                     <div class="row form-group">
-                        <label for="inputUser" class="col-sm-2 form-label">Login as</label>
-
+                        <label for="inputAuthType" class="col-sm-2 form-label">Auth Type</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="inputUser" name="user" placeholder="Enter a user id or token to login with specific user.">
+                            <select name="auth_type" class="form-control" onchange="toggleFields(this.value)">
+                                @foreach($auth_type as $item)
+                                    <option value="{{ $item['value'] }}" {{ $item['select'] ? 'selected' : '' }}>
+                                        {{ $item['title'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="hidden" id="no_auth">
+                        <div class="row form-group">
+                            <label for="inputUser" class="col-sm-2 form-label">Login as</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="inputUser" name="user" placeholder="Enter a user id or token to login with specific user.">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden" id="basic_auth">
+                        <div class="row form-group">
+                            <label for="basic_auth_username" class="col-sm-3 form-label">Username</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" id="basic_auth_username" name="basic_auth_username" placeholder="Enter login.">
+                            </div>
+                        </div>
+                        <div class="row form-group">
+                            <label for="basic_auth_password" class="col-sm-3 form-label">Password</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" id="basic_auth_password" name="basic_auth_password" placeholder="Enter password.">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden" id="bearer_token">
+                        <div class="row form-group">
+                            <label for="bearer_token_token" class="col-sm-3 form-label">Token</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" id="bearer_token_token" name="bearer_token_token" placeholder="Enter token.">
+                            </div>
                         </div>
                     </div>
 
@@ -123,13 +157,12 @@
                             <a class="btn btn-primary param-add">Add param</a>
                         </div>
                     </div>
-
                 </div>
-                  <div class="card-footer" style="margin-bottom: 0px;">
-                        <div class="col-sm-offset-2 col-sm-10">
-                            <button type="submit" class="btn btn-primary">Send</button>
-                        </div>
+                <div class="card-footer" style="margin-bottom: 0px;">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <button type="submit" class="btn btn-primary">Send</button>
                     </div>
+                </div>
 
             </form>
         </div>
@@ -139,8 +172,8 @@
                 <ul class="nav nav-tabs">
                     <li class="nav-item "><a class="nav-link active" data-bs-target="#content" aria-controls="content" data-bs-toggle="tab">Content</a></li>
                     <li class="nav-item "><a class="nav-link " data-bs-target="#headers" aria-controls="header" data-bs-toggle="tab">Headers</a></li>
-                    {{--<li><a href="#cookies" data-toggle="tab">Cookies</a></li>--}}
-                    <li class="nav-item"><a class="nav-link response-status"></a></li>
+                    <li class="nav-item "><a class="nav-link " data-bs-target="#cookies" aria-controls="cookies" data-bs-toggle="tab">Cookies</a></li>
+                    <li class="nav-item "><a class="nav-link response-status"></a></li>
                 </ul>
                 <div class="tab-content card-body">
 
@@ -195,6 +228,34 @@
 
 </template>
 <script data-exec-on-popstate>
+
+
+    /**
+     * Скрыть/Показать поля
+     * @param selectedValue
+     */
+    function toggleFields(selectedValue) {
+        // Скрыть все поля
+        document.getElementById('no_auth').classList.add('hidden');
+        document.getElementById('basic_auth').classList.add('hidden');
+        document.getElementById('bearer_token').classList.add('hidden');
+
+        // Показать выбранные поля
+        if (selectedValue === 'no_auth') {
+            document.getElementById('no_auth').classList.remove('hidden');
+        } else if (selectedValue === 'basic_auth') {
+            document.getElementById('basic_auth').classList.remove('hidden');
+        } else if (selectedValue === 'bearer_token') {
+            document.getElementById('bearer_token').classList.remove('hidden');
+        }
+    }
+
+    // Инициализация видимости полей при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        var selectElement = document.querySelector('select[name="auth_type"]');
+        toggleFields(selectElement.value);
+    });
+
 
     (function () {
         var timer;

@@ -15,6 +15,8 @@ trait BootExtension
 
         static::importAssets();
 
+//        static::createLogFile();
+
         Admin::extend('api-tester', __CLASS__);
     }
 
@@ -50,4 +52,9 @@ trait BootExtension
         Admin::js('/vendor/api-tester/prism.js');
         Admin::css('/vendor/api-tester/prism.css');
     }
+
+//    public static function createLogFile(): void
+//    {
+//        ApiLogger::createLogFile();
+//    }
 }

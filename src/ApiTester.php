@@ -2,6 +2,8 @@
 
 namespace OpenAdminCore\Admin\ApiTester;
 
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Route;
@@ -18,14 +20,14 @@ class ApiTester extends Extension
     /**
      * The Illuminate application instance.
      *
-     * @var \Illuminate\Foundation\Application
+     * @var Application
      */
-    protected $app;
+    protected mixed $app;
 
     /**
      * @var array
      */
-    public static $methodColors = [
+    public static array $methodColors = [
         'GET'    => 'success',
         'HEAD'   => 'secondary',
         'POST'   => 'primary',
@@ -37,9 +39,9 @@ class ApiTester extends Extension
     /**
      * ApiTester constructor.
      *
-     * @param \Illuminate\Foundation\Application|null $app
+     * @param Application|null $app
      */
-    public function __construct(\Illuminate\Foundation\Application $app = null)
+    public function __construct(Application $app = null)
     {
         $this->app = $app ?: app();
     }
@@ -48,21 +50,36 @@ class ApiTester extends Extension
      * @param string $method
      * @param string $uri
      * @param array  $parameters
-     * @param string $userId
+     * @param null   $user
+     * @param array  $list_auth_type
      *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
+     * @throws BindingResolutionException
      */
-    public function call($method, $uri, $parameters = [], $user = null)
+    public function call(string $method, string $uri, array $parameters = [], $user = null, array $list_auth_type = []): Response
     {
         $kernel = $this->app->make('Illuminate\Contracts\Http\Kernel');
         $uri = $this->prepareUrlForRequest($uri);
         $files = [];
-
         foreach ($parameters as $key => $val) {
             if ($val instanceof UploadedFile) {
                 $files[$key] = $val;
                 unset($parameters[$key]);
             }
+        }
+
+        $auth_type = $list_auth_type['auth_type'] ?? 'no_auth';
+        $server = ['HTTP_ACCEPT' => 'application/json'];
+        switch ($auth_type) {
+            case 'basic_auth':
+                $username = $list_auth_type['basic_auth_username'] ?? '';
+                $password = $list_auth_type['basic_auth_password'] ?? '';
+                $server['HTTP_AUTHORIZATION'] = 'Basic ' . base64_encode($username . ':' . $password);
+                break;
+            case 'bearer_token' :
+                $token = $list_auth_type['bearer_token_token'] ?? '';
+                $server['HTTP_AUTHORIZATION'] = 'Bearer ' . $token;
+            break;
         }
 
         $symfonyRequest = SymfonyRequest::create(
@@ -71,7 +88,7 @@ class ApiTester extends Extension
             $parameters,
             [],
             $files,
-            ['HTTP_ACCEPT' => 'application/json']
+            $server
         );
 
         $request = Request::createFromBase($symfonyRequest);
@@ -95,7 +112,7 @@ class ApiTester extends Extension
      *
      * @param $userId
      */
-    protected function loginUsing($userId)
+    protected function loginUsing($userId): true
     {
         $guard = static::config('guard', 'api');
 
@@ -117,10 +134,12 @@ class ApiTester extends Extension
      * @param Response $response
      *
      * @return array
+     * @throws \ReflectionException
      */
-    public function parseResponse(Response $response)
+    public function parseResponse(Response $response): array
     {
         $content = $response->getContent();
+
         $message = $this->getMessage($content);
 
         $jsoned = json_decode($content);
@@ -141,10 +160,10 @@ class ApiTester extends Extension
             'cookies'    => json_encode($response->headers->getCookies(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
             'content'    => $content,
             'message'    => $message,
-            'language'   => $lang,
+            'language' => $lang,
             'status'     => [
-                'code'  => $response->getStatusCode(),
-                'text'  => $this->getStatusText($response),
+                'code' => $response->getStatusCode(),
+                'text' => $this->getStatusText($response),
             ],
         ];
     }
@@ -162,8 +181,9 @@ class ApiTester extends Extension
      * @param Response $response
      *
      * @return string
+     * @throws \ReflectionException
      */
-    protected function getStatusText(Response $response)
+    protected function getStatusText(Response $response): string
     {
         $statusText = new \ReflectionProperty($response, 'statusText');
 
@@ -177,9 +197,9 @@ class ApiTester extends Extension
      *
      * @param array $files
      *
-     * @return mixed
+     * @return array
      */
-    protected function filterFiles($files)
+    protected function filterFiles(array $files): array
     {
         foreach ($files as $key => $file) {
             if ($file instanceof UploadedFile) {
@@ -209,7 +229,7 @@ class ApiTester extends Extension
      *
      * @return string
      */
-    protected function prepareUrlForRequest($uri)
+    protected function prepareUrlForRequest(string $uri): string
     {
         if (Str::startsWith($uri, '/')) {
             $uri = substr($uri, 1);
@@ -223,11 +243,24 @@ class ApiTester extends Extension
     }
 
     /**
+     * Get all auth type
+     * @return array[]
+     */
+    public function getAuthType(): array
+    {
+        return [
+            ['value' => 'no_auth', 'title' => 'No Auth', 'select' => true],
+            ['value' => 'basic_auth', 'title' => 'Basic Auth', 'select' => false],
+            ['value' => 'bearer_token', 'title' => 'Bearer Token', 'select' => false],
+        ];
+    }
+
+    /**
      * Get all api routes.
      *
      * @return array
      */
-    public function getRoutes()
+    public function getRoutes(): array
     {
         $routes = app('router')->getRoutes();
 
@@ -245,7 +278,7 @@ class ApiTester extends Extension
         $routes = collect($routes)->filter()->map(function ($route) {
             $route['parameters'] = json_encode($this->getRouteParameters($route['action']));
 
-            unset($route['middleware'], $route['host'], $route['name'], $route['action']);
+           // unset($route['middleware'], $route['host'], $route['name'], $route['action']);
 
             return $route;
         })->toArray();
@@ -260,7 +293,7 @@ class ApiTester extends Extension
      *
      * @return array
      */
-    protected function getRouteParameters($action)
+    protected function getRouteParameters($action): array
     {
         if (is_callable($action) || $action === 'Closure') {
             return [];
@@ -301,7 +334,7 @@ class ApiTester extends Extension
      *
      * @return array
      */
-    protected static function makeInvokable($action)
+    protected static function makeInvokable($action): array
     {
         if (!method_exists($action, '__invoke')) {
             throw new \UnexpectedValueException("Invalid route action: [{$action}].");
@@ -313,11 +346,11 @@ class ApiTester extends Extension
     /**
      * Get the route information for a given route.
      *
-     * @param \Illuminate\Routing\Route $route
+     * @param Route $route
      *
      * @return array
      */
-    protected function getRouteInformation(Route $route)
+    protected function getRouteInformation(Route $route): array
     {
         return [
             'host'       => $route->domain(),
@@ -337,7 +370,7 @@ class ApiTester extends Extension
      *
      * @return array
      */
-    protected function sortRoutes($sort, $routes)
+    protected function sortRoutes(string $sort, array $routes): array
     {
         return Arr::sort($routes, function ($route) use ($sort) {
             return $route[$sort];
@@ -347,11 +380,11 @@ class ApiTester extends Extension
     /**
      * Get before filters.
      *
-     * @param \Illuminate\Routing\Route $route
+     * @param Route $route
      *
      * @return string
      */
-    protected function getRouteMiddleware($route)
+    protected function getRouteMiddleware(Route $route): string
     {
         return collect($route->gatherMiddleware())->map(function ($middleware) {
             return $middleware instanceof \Closure ? 'Closure' : $middleware;
