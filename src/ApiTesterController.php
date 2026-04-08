@@ -3,14 +3,15 @@
 namespace OpenAdminCore\Admin\ApiTester;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
-use InvalidArgumentException;
 use OpenAdminCore\Admin\Facades\Admin;
 use OpenAdminCore\Admin\Layout\Content;
 use ReflectionException;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ApiTesterController extends Controller
 {
@@ -23,14 +24,12 @@ class ApiTesterController extends Controller
 
             $content->body(view('api-tester::index', [
                 'routes' => $tester->getRoutes(),
-//                'logs'   => ApiLogger::load(),
                 'auth_type' => $tester->getAuthType()
             ]));
         });
     }
 
     /**
-     * @throws BindingResolutionException|ReflectionException
      */
     public function handle(Request $request): array
     {
@@ -44,9 +43,11 @@ class ApiTesterController extends Controller
             'bearer_token_token' => $request->get('bearer_token_token'),
         ];
 
-        // Валидация входных данных
         if (!$method || !$uri) {
-            throw new InvalidArgumentException('Method and URI are required.');
+            return [
+                'status' => 'error',
+                'message' => 'Method and URI are required.',
+            ];
         }
 
         $all = $request->all();
@@ -57,25 +58,111 @@ class ApiTesterController extends Controller
         ksort($vals);
 
         $parameters = [];
-
         foreach ($keys as $index => $key) {
-            $parameters[$key] = Arr::get($vals, $index);
+            if (!empty($key)) {
+                $parameters[$key] = Arr::get($vals, $index);
+            }
         }
-
-        $parameters = array_filter($parameters, function ($key) {
-            return $key !== '';
-        }, ARRAY_FILTER_USE_KEY);
 
         $tester = new ApiTester();
 
         try {
             $response = $tester->call($method, $uri, $parameters, $user, $list_auth_type);
+            $parsed = $tester->parseResponse($response);
+
+            return [
+                'status' => 'ok',
+                'message' => $parsed['message'],
+                'content' => $parsed['content'],
+                'headers' => $parsed['headers'],
+                'cookies' => $parsed['cookies'],
+                'language' => $parsed['language'],
+                'status_code' => $parsed['status']['code'],
+                'status_text' => $parsed['status']['text'],
+            ];
         } catch (\Exception $e) {
-            // Логирование ошибки
             Log::error('API call failed: ' . $e->getMessage());
-            throw $e;
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Получение логов
+     * @return JsonResponse
+     */
+    public function logs(): JsonResponse
+    {
+        $logs = ApiLogger::load();
+
+        return response()->json([
+            'status' => 'ok',
+            'logs' => $logs,
+            'count' => count($logs)
+        ]);
+    }
+
+    /**
+     * Скачивание логов в формате JSON
+     * @return BinaryFileResponse|JsonResponse
+     */
+    public function downloadLogs(): BinaryFileResponse|JsonResponse
+    {
+        $logPath = storage_path(ApiLogger::$path);
+
+        if (!file_exists($logPath)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Файл логов не найден'
+            ], 404);
         }
 
-        return $tester->parseResponse($response);
+        try {
+            $filename = 'api-tester-logs-' . date('Y-m-d-His') . '.json';
+
+            return response()->download($logPath, $filename, [
+                'Content-Type' => 'application/json',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Ошибка скачивания логов: ' . $e->getMessage());
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ошибка при скачивании файла: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Очистка логов
+     * @return JsonResponse
+     */
+    public function clearLogs(): JsonResponse
+    {
+        try {
+            $success = ApiLogger::clear();
+
+            if ($success) {
+                return response()->json([
+                    'status' => 'ok',
+                    'message' => 'Логи успешно очищены'
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Не удалось очистить логи'
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error('Ошибка очистки логов: ' . $e->getMessage());
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ошибка при очистке логов: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

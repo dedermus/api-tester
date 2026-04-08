@@ -6,7 +6,10 @@ use Illuminate\Support\ServiceProvider;
 
 class ApiTesterServiceProvider extends ServiceProvider
 {
-    public function boot()
+    /**
+     * @return void
+     */
+    public function boot(): void
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'api-tester');
 

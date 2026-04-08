@@ -41,15 +41,13 @@
     .hidden {
         display: none;
     }
+</style>
 
-    </style>
 <div class="row">
     <div class="col-md-3">
         <div class="card">
             <div class="card-header"><h2 class="">Routes</h2></div>
             <div class="card-body">
-
-
                 <form action="#" method="post">
                     <div class="input-group">
                         <input type="text" name="message" placeholder="Type Url ..." class="form-control filter-routes">
@@ -58,6 +56,22 @@
                         </span>
                     </div>
                 </form>
+                <div class="d-flex justify-content-between mt-2 mb-2 align-items-center">
+                    <div>
+                        <span class="badge bg-secondary logs-count">Загрузка...</span>
+                    </div>
+                    <div>
+                        <a href="{{ route('api-tester-logs') }}" class="btn btn-sm btn-info view-logs-btn" target="_blank" title="Просмотр в формате JSON">
+                            <i class="icon-eye"></i>
+                        </a>
+                        <a href="{{ route('api-tester-download-logs') }}" class="btn btn-sm btn-success download-logs-btn" title="Скачать JSON файл">
+                            <i class="icon-download"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-danger clear-logs-btn" title="Очистить все логи">
+                            <i class="icon-trash"></i>
+                        </button>
+                    </div>
+                </div>
 
                 <ul class="nav nav-pills nav-stacked routes" style="margin-top: 5px;">
                     @foreach($routes as $route)
@@ -65,8 +79,8 @@
                         <li class="route-item w-100"
                             data-uri="{{ $route['uri'] }}"
                             data-method="{{ $route['method'] }}"
-                            data-method_color="{{$color}}"
-                            data-parameters='{!! $route['parameters'] !!}'>
+                            data-method_color="{{ $color }}"
+                            data-parameters='{{ $route['parameters'] }}'>
 
                             <a href="javascript:void(0)" class="route-link d-flex justify-content-between">
                                 <b>{{ $route['uri'] }}</b>
@@ -77,45 +91,46 @@
                         </li>
                     @endforeach
                 </ul>
-
             </div>
         </div>
-
     </div>
 
-    <!-- /.col -->
     <div class="col-md-9">
         <div class="card">
-            <form id="api-tester-form" method="post" class="form-horizontal api-tester-form"  enctype="multipart/form-data" autocomplete="off" action="{{ route('api-tester-handle') }}">
+            <form id="api-tester-form" method="post" class="form-horizontal api-tester-form" enctype="multipart/form-data" autocomplete="off" action="{{ route('api-tester-handle') }}">
                 <div class="card-header"><h2 class="">Request</h2></div>
                 <div class="card-body">
-
                     <div class="row form-group">
-                        <label for="inputEmail3" class="col-sm-2 form-label">Request</label>
-
+                        <label for="uri" class="col-sm-2 form-label">Request</label>
                         <div class="col-sm-10">
                             <div class="input-group">
                                 <div class="input-group-prepend">
-                                    <a class="input-group-text method">method</a>
+                                    <a class="input-group-text method">GET</a>
                                 </div>
-                                <input type="text" name="uri" class="form-control uri">
-                                <input type="hidden" name="method" class="form-control method">
+
+                                    <input type="text" name="uri" id="uri" class="form-control uri">
+
+                                <input type="hidden" name="method" class="form-control method" value="GET">
                                 {{ csrf_field() }}
                             </div>
                         </div>
                     </div>
+
                     <div class="row form-group">
-                        <label for="inputAuthType" class="col-sm-2 form-label">Auth Type</label>
+                        <label for="auth_type" class="col-sm-2 form-label">Auth Type</label>
                         <div class="col-sm-10">
-                            <select name="auth_type" class="form-control" onchange="toggleFields(this.value)">
-                                @foreach($auth_type as $item)
-                                    <option value="{{ $item['value'] }}" {{ $item['select'] ? 'selected' : '' }}>
-                                        {{ $item['title'] }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label for="auth_type">
+                                <select name="auth_type"  id="auth_type" class="form-control">
+                                    @foreach($auth_type as $item)
+                                        <option value="{{ $item['value'] }}" {{ $item['select'] ? 'selected' : '' }}>
+                                            {{ $item['title'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </label>
                         </div>
                     </div>
+
                     <div class="hidden" id="no_auth">
                         <div class="row form-group">
                             <label for="inputUser" class="col-sm-2 form-label">Login as</label>
@@ -124,6 +139,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="hidden" id="basic_auth">
                         <div class="row form-group">
                             <label for="basic_auth_username" class="col-sm-3 form-label">Username</label>
@@ -138,6 +154,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="hidden" id="bearer_token">
                         <div class="row form-group">
                             <label for="bearer_token_token" class="col-sm-3 form-label">Token</label>
@@ -148,13 +165,10 @@
                     </div>
 
                     <div class="row form-group">
-                        <label class="col-sm-2 form-label">Parameters</label>
-
+                        <label class="col-sm-2 form-label" for="add_params">Parameters</label>
                         <div class="col-sm-10">
-                            <div class="params">
-
-                            </div>
-                            <a class="btn btn-primary param-add">Add param</a>
+                            <div class="params"></div>
+                            <a class="btn btn-primary param-add" id="add_params">Add param</a>
                         </div>
                     </div>
                 </div>
@@ -163,241 +177,329 @@
                         <button type="submit" class="btn btn-primary">Send</button>
                     </div>
                 </div>
-
             </form>
         </div>
 
         <div class="card mt-5">
             <div class="nav-tabs-custom response-tabs d-none">
                 <ul class="nav nav-tabs">
-                    <li class="nav-item "><a class="nav-link active" data-bs-target="#content" aria-controls="content" data-bs-toggle="tab">Content</a></li>
-                    <li class="nav-item "><a class="nav-link " data-bs-target="#headers" aria-controls="header" data-bs-toggle="tab">Headers</a></li>
-                    <li class="nav-item "><a class="nav-link " data-bs-target="#cookies" aria-controls="cookies" data-bs-toggle="tab">Cookies</a></li>
-                    <li class="nav-item "><a class="nav-link response-status"></a></li>
+                    <li class="nav-item"><a class="nav-link active" data-bs-target="#content" aria-controls="content" data-bs-toggle="tab">Content</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-target="#headers" aria-controls="headers" data-bs-toggle="tab">Headers</a></li>
+                    <li class="nav-item"><a class="nav-link" data-bs-target="#cookies" aria-controls="cookies" data-bs-toggle="tab">Cookies</a></li>
+                    <li class="nav-item"><a class="nav-link response-status"></a></li>
                 </ul>
                 <div class="tab-content card-body">
-
-                    <div class="active tab-pane" id="content">
-                        <div class="form-group"><pre><code class="line-numbers"></code></pre></div>
+                    <div class="tab-pane active" id="content">
+                        <pre><code class="language-json line-numbers"></code></pre>
                     </div>
-                    <!-- /.tab-pane -->
-                    <div class="tab-pane" id="cookies">
-                        <div class="form-group"><pre><code class="line-numbers"></code></pre></div>
-                    </div>
-
                     <div class="tab-pane" id="headers">
-                        <div class="form-group"><pre><code class="line-numbers"></code></pre></div>
+                        <pre><code class="language-json line-numbers"></code></pre>
                     </div>
-                    <!-- /.tab-pane -->
+                    <div class="tab-pane" id="cookies">
+                        <pre><code class="language-json line-numbers"></code></pre>
+                    </div>
                 </div>
-                <!-- /.tab-content -->
             </div>
         </div>
-
     </div>
-    <!-- /.col -->
 </div>
 
-
 <template class="param-tpl">
-
     <div class="form-inline param d-flex">
-
         <div class="form-group me-2">
             <input type="text" name="key[__index__]" class="form-control param-key" style="width: 120px" placeholder="Key"/>
         </div>
         <div class="form-group">
             <div class="input-group">
-                <input type="text" name="val[__index__]" class="form-control param-val" style="width: 280px"  placeholder="value"/>
+                <input type="text" name="val[__index__]" class="form-control param-val" style="width: 280px" placeholder="value"/>
                 <span class="input-group-btn">
-                  <a type="button" class="btn btn-default btn-light change-val-type"><i class="icon-upload"></i></a>
+                    <a type="button" class="btn btn-default btn-light change-val-type"><i class="icon-upload"></i></a>
                 </span>
             </div>
         </div>
-
         <div class="form-group text-danger">
             <i class="btn btn-danger icon-times-circle param-remove"></i>
         </div>
         <br/>
-        <div class="form-group param-desc hide p-2">
+        <div class="form-group param-desc d-none p-2">
             <i class="icon-info-circle"></i>&nbsp;
             <span class="text"></span>
-            <b class="text-red hide param-required">*</b>
+            <b class="text-danger d-none param-required">*</b>
         </div>
     </div>
-
 </template>
+
 <script data-exec-on-popstate>
-
-
-    /**
-     * Скрыть/Показать поля
-     * @param selectedValue
-     */
-    function toggleFields(selectedValue) {
-        // Скрыть все поля
-        document.getElementById('no_auth').classList.add('hidden');
-        document.getElementById('basic_auth').classList.add('hidden');
-        document.getElementById('bearer_token').classList.add('hidden');
-
-        // Показать выбранные поля
-        if (selectedValue === 'no_auth') {
-            document.getElementById('no_auth').classList.remove('hidden');
-        } else if (selectedValue === 'basic_auth') {
-            document.getElementById('basic_auth').classList.remove('hidden');
-        } else if (selectedValue === 'bearer_token') {
-            document.getElementById('bearer_token').classList.remove('hidden');
-        }
-    }
-
-    // Инициализация видимости полей при загрузке страницы
-    document.addEventListener('DOMContentLoaded', function() {
-        var selectElement = document.querySelector('select[name="auth_type"]');
-        toggleFields(selectElement.value);
-    });
-
-
     (function () {
-        var timer;
-        document.querySelector('.filter-routes').addEventListener('keyup', function (e) {
-            var _this = e.target;
-            clearTimeout(timer);
-            timer = setTimeout(function () {
-                var search = _this.value;
-                var regex = new RegExp(search);
-                document.querySelectorAll('ul.routes li').forEach(el => {
-                    if (!regex.test(el.dataset.uri)) {
-                        el.classList.add('d-none');
-                    } else {
-                        el.classList.remove('d-none');
-                    }
+        // Определи функцию внутри этого блока
+        function toggleFields(selectedValue) {
+            document.getElementById('no_auth').classList.add('hidden');
+            document.getElementById('basic_auth').classList.add('hidden');
+            document.getElementById('bearer_token').classList.add('hidden');
+
+            if (selectedValue === 'no_auth') {
+                document.getElementById('no_auth').classList.remove('hidden');
+            } else if (selectedValue === 'basic_auth') {
+                document.getElementById('basic_auth').classList.remove('hidden');
+            } else if (selectedValue === 'bearer_token') {
+                document.getElementById('bearer_token').classList.remove('hidden');
+            }
+        }
+
+        // При загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            var selectElement = document.querySelector('select[name="auth_type"]');
+            if (selectElement) {
+                toggleFields(selectElement.value); // начальное состояние
+
+                // Добавь обработчик события
+                selectElement.addEventListener('change', function() {
+                    toggleFields(this.value);
                 });
-            }, 300);
+            }
+
+            // Вызываем функцию обновления счетчика логов
+            updateLogsCount();
         });
 
+        var timer;
+        var filterRoutes = document.querySelector('.filter-routes');
+        if (filterRoutes) {
+            filterRoutes.addEventListener('keyup', function (e) {
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    var search = e.target.value;
+                    var regex = search ? new RegExp(search, 'i') : null;
+                    document.querySelectorAll('ul.routes li').forEach(el => {
+                        if (!regex || regex.test(el.dataset.uri)) {
+                            el.classList.remove('d-none');
+                        } else {
+                            el.classList.add('d-none');
+                        }
+                    });
+                }, 300);
+            });
+        }
+
         document.querySelectorAll(".route-item").forEach(el => {
-
-            el.addEventListener("click",function (e) {
-
+            el.addEventListener("click", function (e) {
                 var li = e.currentTarget;
                 var a_method = document.querySelector('a.method');
-                a_method.innerHTML = li.dataset.method
-                a_method.className.replace(/bg-[^\s]+/ ,'');
-                a_method.classList.add('bg-'+li.dataset.method_color);
-                a_method.classList.add('text-white');
+                a_method.textContent = li.dataset.method;
+                a_method.className = 'input-group-text method bg-' + li.dataset.method_color + ' text-white';
 
-                document.querySelector('.uri').value = li.dataset.uri;
                 document.querySelector('.uri').value = li.dataset.uri;
                 document.querySelector('input.method').value = li.dataset.method;
 
-                document.querySelectorAll('.param').forEach(el=>{
-                    el.remove();
-                });
+                document.querySelectorAll('.param').forEach(el => el.remove());
+
+                var params;
+                try {
+                    params = JSON.parse(li.dataset.parameters || '[]');
+                } catch (ex) {
+                    params = [];
+                }
+                appendParameters(params);
 
                 document.querySelector('.response-tabs').classList.remove('d-none');
-
-                appendParameters(eval(li.dataset.parameters));
-            },true)
+            });
         });
-
 
         function getParamCount() {
             return document.querySelectorAll('.param').length;
         }
 
         function appendParameters(params) {
-
-            for (var param in params) {
-
+            params.forEach(param => {
                 var html = document.querySelector('template.param-tpl').innerHTML;
-                html = html.replace(new RegExp('__index__', 'g'), getParamCount());
-
+                html = html.replace(/__index__/g, getParamCount());
                 var append = htmlToElement(html);
 
-                append.querySelector('.param-key').value = params[param].name;
-                append.querySelector('.param-val').value = params[param].defaultValue;
-                append.querySelector('.param-desc').classList.remove('d-none');
-                append.querySelector('.param-desc').querySelector('.text').innerHTML = params[param].description;
+                append.querySelector('.param-key').value = param.name || '';
+                append.querySelector('.param-val').value = param.defaultValue || '';
 
-                if (params[param].required == 'true') {
+                if (param.description) {
+                    append.querySelector('.param-desc').classList.remove('d-none');
+                    append.querySelector('.param-desc .text').textContent = param.description;
+                }
+
+                if (param.required === 'true') {
                     append.querySelector('.param-desc .param-required').classList.remove('d-none');
                 }
 
-                if (params[param].type == 'file') {
+                if (param.type === 'file') {
                     append.querySelector('.param-val').setAttribute('type', 'file');
-                    append.querySelector('.change-val-type i').classList.toggle("icon-upload");
-                    append.querySelector('.change-val-type i').classList.toggle("icon-pen");
+                    var icon = append.querySelector('.change-val-type i');
+                    icon.classList.remove('icon-upload');
+                    icon.classList.add('icon-pen');
                 }
 
                 document.querySelector('.params').append(append);
-            }
+            });
         }
 
-        document.addEventListener('click',function(event){
+        document.addEventListener('click', function (event) {
             var target = event.target.closest(".change-val-type");
-            if (target && this.contains(target)) {
-
-                var type = target.parentNode.previousElementSibling;
-                setType = (type.type == 'text') ? 'file' : 'text';
-                type.setAttribute('type',setType);
-                target.querySelector('i').classList.toggle("icon-upload");
-                target.querySelector('i').classList.toggle("icon-pen");
+            if (target) {
+                var input = target.closest('.input-group').querySelector('.param-val');
+                var icon = target.querySelector('i');
+                if (input.type === 'text') {
+                    input.type = 'file';
+                    icon.classList.remove('icon-upload');
+                    icon.classList.add('icon-pen');
+                } else {
+                    input.type = 'text';
+                    icon.classList.remove('icon-pen');
+                    icon.classList.add('icon-upload');
+                }
             }
+
             var target2 = event.target.closest(".param-remove");
-            if (target2 && this.contains(target2)) {
+            if (target2) {
                 target2.closest('.param').remove();
             }
         });
 
-        document.querySelector('.param-add').addEventListener('click',function (event) {
-            var html = document.querySelector('template.param-tpl').innerHTML;
-            html = html.replace(new RegExp('__index__', 'g'), getParamCount());
-            var append = htmlToElement(html);
-            document.querySelector('.params').append(append);
-            document.querySelector('.params .param').querySelector('input:first-child').focus();
-        });
+        var paramAddBtn = document.querySelector('.param-add');
+        if (paramAddBtn) {
+            paramAddBtn.addEventListener('click', function () {
+                var html = document.querySelector('template.param-tpl').innerHTML;
+                html = html.replace(/__index__/g, getParamCount());
+                var append = htmlToElement(html);
+                document.querySelector('.params').append(append);
+                append.querySelector('input:first-child').focus();
+            });
+        }
 
-        function renderResponse(response) {
+        function renderResponse(data) {
+            document.querySelector('#content pre code').textContent = data.content || '';
+            document.querySelector('#headers pre code').textContent = data.headers || '';
+            document.querySelector('#cookies pre code').textContent = data.cookies || '';
 
-            console.log(response.language);
-
-            document.querySelector('.response-tabs #content pre code').innerHTML = response.content;
-            document.querySelector('.response-tabs #headers pre code').innerHTML = response.headers;
-            document.querySelector('.response-tabs #cookies pre code').innerHTML = response.cookies;
-            document.querySelectorAll('.response-tabs').forEach(el=>{
-                el.classList.remove('d-none');
-                el.className.replace(/language-[^\s]+/ ,'');
-                el.classList.add('language-'+response.language);
+            var lang = data.language || 'json';
+            document.querySelectorAll('.response-tabs pre code').forEach(el => {
+                el.className = 'language-' + lang + ' line-numbers';
             });
 
             Prism.highlightAll();
 
-            var statusHolder = document.querySelector('.response-status');
-            statusHolder.innerHTML = 'Status:&nbsp;'+ response.status.code+'&nbsp;&nbsp;'+response.status.text;
-
-            if (response.status.code >= 400) {
-                statusHolder.classList.remove('text-success');
-                statusHolder.classList.add('text-danger');
-            } else {
-                statusHolder.classList.add('text-success');
-                statusHolder.classList.remove('text-danger');
-            }
+            var statusEl = document.querySelector('.response-status');
+            statusEl.textContent = 'Status: ' + data.status_code + ' ' + data.status_text;
+            statusEl.className = 'nav-link response-status ' + (data.status_code >= 400 ? 'text-danger' : 'text-success');
         }
 
+        var apiTesterForm = document.getElementById('api-tester-form');
+        if (apiTesterForm) {
+            apiTesterForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                let form = this;
 
-        document.getElementById('api-tester-form').addEventListener('submit', function (event) {
-            event.preventDefault();
-            var form =  document.getElementById('api-tester-form');
-            admin.form.submit(form,function (result){
-                if (result.status.text = 'ok') {
-                    admin.toastr.success(result.data.message);
-                    renderResponse(result.data);
-                } else {
-                    admin.toastr.error(result.data.message);
+                admin.form.submit(form, function (result) {
+                    if (result) {
+                        if (result.data.status_code === 200) {
+                            admin.toastr.success(result.data.message);
+                        } else if (result.data.status === 'error') {
+                            admin.toastr.info(result.data.message);
+                        } else {
+                            admin.toastr.error(result.data.message);
+                        }
+                        renderResponse(result.data);
+                    } else {
+                        let msg = result?.message || 'Unknown error';
+                        admin.toastr.error(msg);
+                        console.error('API Tester error:', result);
+                    }
+                });
+            });
+        }
+
+        // Кнопка очистки логов
+        var clearLogsBtn = document.querySelector('.clear-logs-btn');
+        if (clearLogsBtn) {
+            clearLogsBtn.addEventListener('click', function() {
+                if (confirm('Вы уверены, что хотите очистить все логи? Это действие нельзя отменить.')) {
+                    // Используем fetch для отправки POST запроса
+                    fetch('{{ route("api-tester-clear-logs") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.status === 'ok') {
+                                admin.toastr.success('Логи успешно очищены');
+                                updateLogsCount(); // Обновляем счетчик после очистки
+                            } else {
+                                admin.toastr.error('Ошибка при очистке логов: ' + (result.message || 'Неизвестная ошибка'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error clearing logs:', error);
+                            admin.toastr.error('Ошибка при очистке логов');
+                        });
+                }
+            });
+        }
+
+        // Обработчик для кнопки просмотра логов (открытие в новом окне)
+        var viewLogsBtn = document.querySelector('.view-logs-btn');
+        if (viewLogsBtn) {
+            viewLogsBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.open(this.href, '_blank', 'width=800,height=600,scrollbars=yes');
+                return false;
+            });
+        }
+
+        // Обработчик для кнопки скачивания логов
+        var downloadLogsBtn = document.querySelector('.download-logs-btn');
+        if (downloadLogsBtn) {
+            downloadLogsBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Открываем ссылку в новом окне для скачивания
+                window.open(this.href, '_blank');
+
+                return false;
+            });
+        }
+
+        // Функция для обновления счетчика логов
+        function updateLogsCount() {
+            var badge = document.querySelector('.logs-count');
+            if (!badge) return;
+
+            badge.textContent = 'Загрузка...';
+
+            // Используем fetch вместо admin.ajax.get
+            fetch('{{ route("api-tester-logs") }}', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-        });
-
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'ok') {
+                        var count = result.count || 0;
+                        badge.textContent = 'Логов: ' + count;
+                        badge.className = 'badge logs-count ' + (count > 0 ? 'bg-primary' : 'bg-secondary');
+                    } else {
+                        badge.textContent = 'Ошибка загрузки';
+                        badge.className = 'badge logs-count bg-danger';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load logs count:', error);
+                    badge.textContent = 'Ошибка загрузки';
+                    badge.className = 'badge logs-count bg-danger';
+                });
+        }
 
     })();
 </script>

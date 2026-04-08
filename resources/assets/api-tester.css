@@ -1,0 +1,126 @@
+/* Дополнительные стили для API Tester */
+
+/* Анимации */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.loading {
+    animation: pulse 1.5s infinite;
+}
+
+/* Стили для JSON viewer */
+.json-viewer .json-object {
+    margin-left: 20px;
+}
+
+.json-viewer .json-array {
+    margin-left: 20px;
+}
+
+.json-viewer .json-property {
+    display: flex;
+    margin-bottom: 2px;
+}
+
+.json-viewer .json-key {
+    min-width: 100px;
+    color: #007bff;
+    font-weight: bold;
+}
+
+.json-viewer .json-value {
+    flex: 1;
+    color: #28a745;
+}
+
+/* Стили для вкладок */
+.nav-tabs .nav-link {
+    border: none;
+    color: #6c757d;
+    font-weight: 500;
+    padding: 8px 16px;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #007bff;
+    border: none;
+}
+
+.nav-tabs .nav-link.active {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+    background: none;
+}
+
+/* Стили для таблиц */
+.table-sm th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Стили для статусов */
+.badge.status-2xx { background: #28a745; }
+.badge.status-3xx { background: #17a2b8; }
+.badge.status-4xx { background: #ffc107; color: #212529; }
+.badge.status-5xx { background: #dc3545; }
+
+/* Стили для метода */
+.method-badge {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .api-tester-container {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .column {
+        width: 100% !important;
+        margin-bottom: 15px;
+    }
+}
+
+/* Стили для кнопок */
+.btn-api {
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-api:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Стили для input */
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+/* Стили для карточек */
+.card {
+    border: 1px solid #e3e6f0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.card-header {
+    background: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+    padding: 12px 20px;
+}
+
+.card-body {
+    padding: 20px;
+}
